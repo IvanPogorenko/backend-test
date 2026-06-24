@@ -44,9 +44,12 @@ spring:
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/jhipsterApp
     username: jhipsterApp
-    password:
+    password: password
   thymeleaf:
     cache: false
+  docker:
+    compose:
+      enabled: false
 
 server:
   port: 8080

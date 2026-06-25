@@ -2,7 +2,9 @@ package com.mycompany.myapp.web.rest;
 
 import com.mycompany.myapp.domain.Department;
 import com.mycompany.myapp.repository.DepartmentRepository;
+import com.mycompany.myapp.service.DepartmentAnalyticsService;
 import com.mycompany.myapp.service.DepartmentService;
+import com.mycompany.myapp.service.dto.DepartmentAnalyticsDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -39,10 +41,17 @@ public class DepartmentResource {
 
     private final DepartmentService departmentService;
 
+    private final DepartmentAnalyticsService departmentAnalyticsService;
+
     private final DepartmentRepository departmentRepository;
 
-    public DepartmentResource(DepartmentService departmentService, DepartmentRepository departmentRepository) {
+    public DepartmentResource(
+        DepartmentService departmentService,
+        DepartmentAnalyticsService departmentAnalyticsService,
+        DepartmentRepository departmentRepository
+    ) {
         this.departmentService = departmentService;
+        this.departmentAnalyticsService = departmentAnalyticsService;
         this.departmentRepository = departmentRepository;
     }
 
@@ -193,6 +202,32 @@ public class DepartmentResource {
         LOG.debug("REST request to get Department : {}", id);
         Mono<Department> department = departmentService.findOne(id);
         return ResponseUtil.wrapOrNotFound(department);
+    }
+
+    /**
+     * {@code GET  /departments/{id}/analytics} : get aggregated analytics for the "id" department.
+     * <p>
+     * Возвращает агрегированную статистику по подразделению, включая:
+     * <ul>
+     *   <li>общее количество сотрудников;</li>
+     *   <li>среднюю заработную плату;</li>
+     *   <li>минимальную и максимальную заработную плату;</li>
+     *   <li>количество руководителей;</li>
+     *   <li>количество сотрудников без руководителя;</li>
+     *   <li>распределение сотрудников по должностям.</li>
+     * </ul>
+     *
+     * @param id the id of the department to retrieve analytics for.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the analytics data,
+     *         or with status {@code 404 (Not Found)} if the department does not exist.
+     */
+    @GetMapping("/{id}/analytics")
+    public Mono<ResponseEntity<DepartmentAnalyticsDTO>> getDepartmentAnalytics(@PathVariable("id") Long id) {
+        LOG.debug("REST request to get analytics for Department : {}", id);
+        return departmentAnalyticsService
+            .getAnalytics(id)
+            .map(ResponseEntity::ok)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 
     /**

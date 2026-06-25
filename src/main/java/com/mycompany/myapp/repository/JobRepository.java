@@ -37,6 +37,17 @@ public interface JobRepository extends ReactiveCrudRepository<Job, Long>, JobRep
     @Query("SELECT * FROM job entity WHERE entity.id not in (select job_history_id from job_history)")
     Flux<Job> findAllWhereJobHistoryIsNull();
 
+    /**
+     * Найти все должности сотрудников указанного подразделения.
+     * Связь осуществляется через таблицу employee, где job.employee_id ссылается на сотрудника,
+     * а employee.department_id — на подразделение.
+     *
+     * @param departmentId идентификатор подразделения
+     * @return {@link Flux} должностей сотрудников подразделения
+     */
+    @Query("SELECT j.* FROM job j JOIN employee e ON j.employee_id = e.id WHERE e.department_id = :departmentId")
+    Flux<Job> findByEmployeeDepartmentId(Long departmentId);
+
     @Override
     <S extends Job> Mono<S> save(S entity);
 

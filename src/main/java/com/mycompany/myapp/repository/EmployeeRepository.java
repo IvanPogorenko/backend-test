@@ -31,6 +31,16 @@ public interface EmployeeRepository extends ReactiveCrudRepository<Employee, Lon
     @Query("SELECT * FROM employee entity WHERE entity.id not in (select job_history_id from job_history)")
     Flux<Employee> findAllWhereJobHistoryIsNull();
 
+    /**
+     * Найти все уникальные идентификаторы руководителей сотрудников указанного подразделения.
+     * Руководитель — это сотрудник, на которого ссылаются другие сотрудники через manager_id.
+     *
+     * @param departmentId идентификатор подразделения
+     * @return {@link Flux} уникальных идентификаторов руководителей
+     */
+    @Query("SELECT DISTINCT e.manager_id FROM employee e WHERE e.department_id = :departmentId AND e.manager_id IS NOT NULL")
+    Flux<Long> findManagerIdsByDepartmentId(Long departmentId);
+
     @Override
     <S extends Employee> Mono<S> save(S entity);
 
